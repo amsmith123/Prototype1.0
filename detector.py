@@ -12,5 +12,6 @@ class Detector:
         stream=False
         if input_type.lower == "video" or input_type.lower == "v":
             stream=True
-        return self.model(source,stream=stream,task=task,classes=range(0,6))
+        results = self.model(source,stream=stream,task=task,classes=range(0,6))
+        return results
         
