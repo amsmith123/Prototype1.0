@@ -68,6 +68,18 @@ def remove_tmp(tmp_directory):
         print(f"Error occurred while deleting directory '{tmp_directory}': {e}")
 
 
+def clear():
+    if 'in_file' in st.session_state:
+        del st.session_state['in_file']
+    if 'out_file' in st.session_state:
+        del st.session_state['out_file']
+    if 'inf_speed' in st.session_state:
+        st.session_state['inf_speed'] = 0
+    if 'summary' in st.session_state:
+        st.session_state['summary'] = []
+
+
+
 # Get path of current directory       
 dir = os.path.abspath(os.path.dirname(__file__))
 probs = None
@@ -82,11 +94,26 @@ st.title("Defect Detector")
 
 col1, col2 = st.columns(2)
 
+if 'in_file' not in st.session_state:
+    st.session_state['in_file'] = None
+if 'out_file' not in st.session_state:
+    st.session_state['out_file'] = None
+if 'inf_speed' not in st.session_state:
+    st.session_state['inf_speed'] = 0
+if 'summary' not in st.session_state:
+    st.session_state['summary'] = []
+
 with col1:
     st.header("Input")
     types = ["jpg", "jpeg", "png","mp4","mov","wmv"]
-    file = st.file_uploader("Choose an Image", type=types,key=10101)
     
+    
+    file = st.session_state.in_file
+    if file is None:
+        file = st.file_uploader("Choose an Image", type=types, key='file_uploader')
+        st.session_state.in_file = file
+        if file is not None:
+            st.rerun()
     
     # Display the uploaded image
     if file is not None:
@@ -104,28 +131,67 @@ with col1:
 
 with col2:
     st.header("Output")
-    for _ in range(0,9):
-        st.write("")
     
     # Make Prediction
-    if file is not None:
-        st.write("predicting") 
+    if file is not None: 
         print(f"\n{type(input)}\n")
-        inf_speed = 0
         if in_type == "image":
-            results = dtr.detect(input,input_type=in_type)
-            summary = []
-            for result in results:
-                inf_speed += result.speed['inference']
-                image = result.plot()
-                summary.append(result.verbose()) 
-                st.image(image,caption="Output", use_column_width=True)      
-        elif in_type == "video":            
-            inf_speed = process_video(input, dtr)
-            with open("tmp/output.mp4", "rb") as file:
-                st.video(data=file.read(), format="video/mp4")
-            remove_tmp('tmp')
+            if st.session_state.out_file is None:
+                output = dtr.detect(input,input_type=in_type)
+                st.session_state.out_file = output
             
-        st.write(f"Inference Speed: {inf_speed} ms")
+            results = st.session_state.out_file
+            st.session_state.inf_speed = 0
+            for result in results:
+                st.session_state.inf_speed += result.speed['inference']
+                image = result.plot()
+                st.session_state.summary.append(result.verbose()) 
+                st.image(image,caption="Output", use_column_width=True)      
+        elif in_type == "video":       
+            if st.session_state.out_file is None:
+                st.spinner(text="Detection in progress...")    
+                st.session_state.inf_speed = process_video(input, dtr)
+                with open("tmp/output.mp4", "rb") as file:
+                    st.session_state.out_file = file.read()
+            st.video(st.session_state.out_file, format="video/mp4")
+            
+            remove_tmp('tmp')
     else:
         st.write("Result will show here.")
+        st.session_state.inf_speed = 0
+        st.session_state.summary = []
+
+dashboard = st.container(border=True)
+
+css = open('style.css')
+style = f"""
+<style>
+    {css.read()}
+</style>
+"""
+dashboard.markdown(style, unsafe_allow_html=True)
+dashboard.markdown("<div class='dashboard-container'><h2 style='text-align: center; color: black;'>Dashboard</h2></div>", unsafe_allow_html=True)
+# dashboard.divider()
+d1, d2 = dashboard.columns(2)
+
+with d1:
+    st.markdown("<h3 style='text-align: center; color: black;'>Options</h3>", unsafe_allow_html=True)
+    input_type = st.radio(
+        "Input type:",
+        ["From File", "From Live Video Feed"],
+        horizontal=True
+    )
+    st.button("Clear",on_click = clear)
+    
+with d2:
+    inf_speed = st.session_state.inf_speed
+    summary = st.session_state.summary
+    st.markdown(
+        f"""
+        <div class='col1'>
+        <h3 style='text-align: center; color: black;'>Detection Results</h3>
+        <p>Inference Speed: {round(inf_speed, 2)} ms</p>
+        <p>{summary[0] if len(summary) > 0 else ''}</p>
+        </div>
+        """, 
+        unsafe_allow_html=True)
