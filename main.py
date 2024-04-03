@@ -8,6 +8,7 @@ import tempfile
 import os
 import detector as dt
 import shutil
+import re
 
 
 def save_uploaded_file(uploaded_file):
@@ -216,12 +217,16 @@ with d1:
 with d2:
     inf_speed = st.session_state.inf_speed
     summary = st.session_state.summary
+    summary = summary[len(summary)-1] if len(summary) > 0 else ''
+    total_defects = sum(int(number) for number in re.findall(r'\d+', summary))
+    defects = f'<p>Total Number of Defects: {total_defects}</p>' if len(summary) > 0 else ''
     st.markdown(
         f"""
         <div class='col1'>
         <h3 style='text-align: center; color: black;'>Detection Results</h3>
         <p>Inference Speed: {round(inf_speed, 2)} ms</p>
-        <p>{summary[0] if len(summary) > 0 else ''}</p>
+        {defects}
+        <p>{summary}</p>
         </div>
         """, 
         unsafe_allow_html=True)
