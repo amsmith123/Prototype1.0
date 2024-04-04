@@ -99,7 +99,7 @@ dtr = dt.Detector(f"{dir}\\best.pt")
 
 
 st.title("Defect Detector")
-col1, col2 = st.columns(2)
+col1, col2 = st.columns(2, gap = "medium")
 
 # Set state variables
 if 'in_file' not in st.session_state:
@@ -180,8 +180,7 @@ with col2:
         st.session_state.summary = []
 
 
-# Create Dashboard section at bottom
-dashboard = st.container(border=True)
+
 
 # Load CSS from style.css
 css = open('style.css')
@@ -191,8 +190,14 @@ style = f"""
 </style>
 """
 
+# Inject CSS
+st.markdown(style, unsafe_allow_html=True)
+
+# Create Dashboard section at bottom
+dashboard = st.container(border=True)
+
+
 # Create Dashboard header
-dashboard.markdown(style, unsafe_allow_html=True)
 dashboard.markdown("<div class='dashboard-container'><h2 style='text-align: center; color: black;'>Dashboard</h2></div>", unsafe_allow_html=True)
 
 # Create dashboard columns

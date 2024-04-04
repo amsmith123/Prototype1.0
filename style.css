@@ -1,11 +1,11 @@
 /* Reduce the bottom margin of all h2 elements within the container */
 .dashboard-container h2 {
-    margin-bottom: 5px !important;
+    margin-bottom: 20px !important;
     margin-top: 5px;
-    padding-bottom: 5px;
+    padding-bottom: 20px;
     padding-top: 5px;
     border-bottom-style: solid;
-    border-bottom-color: gray;
+    border-bottom-color: rgb(70, 70, 70);
 }
 /* Add a custom class to the container for specificity */
 div.dashboard-container > div {
@@ -13,8 +13,8 @@ div.dashboard-container > div {
     padding-bottom: 0px;
 }
 .col1 {
-    border-left-style: solid;
-    border-left-color: gray;
+    /* border-left-style: solid;
+    border-left-color: gray; */
     padding-left: 25px;
     padding-bottom: 70px;
 }
